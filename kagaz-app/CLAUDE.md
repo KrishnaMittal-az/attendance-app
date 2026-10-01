@@ -1,9 +1,7 @@
-<!--
-NOTE FOR THE SKETCH-BUILDER RUN: if your working directory is `playground/`, this file is NOT
-for you. You are the headless builder that turns a sketch into an app; ignore this brief and
-follow only the prompt you were given. (The control app normally starts you with --safe-mode,
-which skips CLAUDE.md files entirely; this note is a fallback for older Claude Code versions.)
--->
+> **Sketch-builder runs: this file is not for you.** If your working directory is `playground/`, you
+> are the headless builder that turns a sketch into an app. Ignore this brief and follow only the
+> prompt you were given. (The control app normally starts you with `--safe-mode`, which skips
+> CLAUDE.md files entirely; this note is the fallback for older Claude Code versions.)
 
 # Kagaz → App — project brief
 

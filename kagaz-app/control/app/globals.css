@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-hand: "Kalam", "Comic Sans MS", cursive;
+
+  /* Stage palette: calm near-black surfaces + a warm "kagaz" paper accent. */
+  --color-stage: #0b0d12;
+  --color-panel: #11141b;
+  --color-raised: #171b24;
+  --color-term: #07080b;
+  --color-paper: #f4ecda;
+  --color-ink: #2f2a22;
+  --color-clay: #d97757;
+
+  --animate-blink: blink 1.06s step-end infinite;
+  --animate-dot: dot 1.2s ease-in-out infinite;
+  --animate-progress: progress 1.4s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  --animate-glow: glow 2s ease-out forwards;
+  --animate-scan: scan 2.6s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-pop: pop 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  --animate-rise: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-drawer: drawer 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-toast: toast 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-line-in: line-in 0.25s ease-out;
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes dot {
+    0%,
+    80%,
+    100% {
+      opacity: 0.15;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+  @keyframes progress {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+  @keyframes glow {
+    0% {
+      box-shadow: 0 0 0 0 rgb(52 211 153 / 0);
+    }
+    25% {
+      box-shadow:
+        0 0 0 2px rgb(52 211 153 / 0.7),
+        0 0 60px 8px rgb(52 211 153 / 0.28);
+    }
+    100% {
+      box-shadow:
+        0 0 0 1px rgb(52 211 153 / 0),
+        0 0 60px 8px rgb(52 211 153 / 0);
+    }
+  }
+  @keyframes scan {
+    0% {
+      top: -22%;
+      opacity: 0;
+    }
+    15%,
+    85% {
+      opacity: 1;
+    }
+    100% {
+      top: 100%;
+      opacity: 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  @keyframes drawer {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes toast {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+    }
+  }
+  @keyframes line-in {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+  }
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden; /* stage screen: panels scroll, the page never does */
+  }
+
+  body {
+    background: var(--color-stage);
+    color: #e7e9ee;
+  }
+
+  /* Tailwind v4 resets buttons to cursor: default; a stage UI wants pointers. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  [role="switch"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: rgb(217 119 87 / 0.35);
+  }
+
+  /* Slightly larger UI on a 1080p projector; everything is rem-based. */
+  @media (min-width: 1800px) and (min-height: 1000px) {
+    html {
+      font-size: 17px;
+    }
+  }
+}
+
+@utility focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  &:focus-visible {
+    outline-color: var(--color-clay);
+  }
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.14) transparent;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Notebook paper: faint blue rules and a red margin line. */
+@utility paper-ruled {
+  background-color: var(--color-paper);
+  background-image:
+    linear-gradient(90deg, transparent 44px, rgb(214 92 92 / 0.3) 44px, rgb(214 92 92 / 0.3) 46px, transparent 46px),
+    repeating-linear-gradient(180deg, transparent 0 29px, rgb(76 112 168 / 0.16) 29px 30px);
+}

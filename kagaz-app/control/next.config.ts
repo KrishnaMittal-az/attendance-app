@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   // SSE must not be buffered by gzip.
   compress: false,
   devIndicators: false,
+  // Don't let `next dev` write AGENTS.md/CLAUDE.md into control/.
+  agentRules: false,
   // Child processes, fs and node:http are used by the API routes; keep qrcode server-side.
   serverExternalPackages: ["qrcode"],
 };
