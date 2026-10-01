@@ -34,6 +34,7 @@ Options:
   --max-turns <turns>                  Maximum number of agentic turns
   --append-system-prompt <prompt>      Append a system prompt to the default system prompt
   -r, --resume [sessionId]             Resume a conversation by session ID
+  --session-id <uuid>                  Use a specific session ID for the conversation
   -v, --version                        Output the version number
   -h, --help                           Display help for command
 `;
@@ -65,7 +66,7 @@ const modelArg = argValue("--model");
 const MODEL = `mock-${modelArg ?? "default"}`;
 const PARTIAL = argv.includes("--include-partial-messages");
 const CWD = process.cwd();
-const SESSION = resumeId ?? crypto.randomUUID();
+const SESSION = resumeId ?? argValue("--session-id") ?? crypto.randomUUID();
 const started = Date.now();
 let turns = 0;
 

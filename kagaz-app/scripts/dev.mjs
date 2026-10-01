@@ -34,7 +34,8 @@ const children = [];
 let shuttingDown = false;
 
 function run(name, cwd) {
-  const child = spawn("npm", ["run", "dev"], { cwd: path.join(root, cwd), env, shell: isWin });
+  // Own process group (detached) so shutdown can kill npm *and* the dev server it started.
+  const child = spawn("npm", ["run", "dev"], { cwd: path.join(root, cwd), env, shell: isWin, detached: !isWin });
   const prefix = `${colors[name]}[${name}]\x1b[0m `;
   const pipe = (stream, out) => {
     let buf = "";
@@ -56,17 +57,29 @@ function run(name, cwd) {
   children.push(child);
 }
 
+function killTree(child, signal) {
+  if (child.exitCode !== null || child.pid === undefined) return;
+  try {
+    if (isWin) spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"]);
+    else process.kill(-child.pid, signal); // the whole group: npm, sh and next/vite
+  } catch {
+    // already gone
+  }
+}
+
 function shutdown(code = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
-  for (const child of children) {
-    if (child.exitCode === null) child.kill("SIGTERM");
-  }
-  setTimeout(() => process.exit(code), 500);
+  for (const child of children) killTree(child, "SIGTERM");
+  setTimeout(() => {
+    for (const child of children) killTree(child, "SIGKILL");
+    process.exit(code);
+  }, 1500);
 }
 
 process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
+process.on("SIGHUP", () => shutdown(0));
 
 console.log(`\n  Kagaz → App ${mock ? "(MOCK Claude — rehearsal mode)" : ""}`);
 console.log("  Stage screen:  http://localhost:3000");

@@ -1,6 +1,7 @@
 // How we invoke Claude Code headless: binary, flags (feature-detected from `claude --help`), env, prompts.
 // Flags follow code.claude.com/docs/en/headless and /cli-reference.
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mockScriptPath, rootDir } from "./paths";
 import { configuredEffort, configuredModel, setCliVersion } from "./store";
 
@@ -15,6 +16,7 @@ const OPTIONAL_FLAGS = [
   "--permission-prompts",
   "--safe-mode",
   "--restricted",
+  "--session-id",
 ] as const;
 
 export interface CliFeatures {
@@ -48,6 +50,13 @@ export function claudeCommand(): { cmd: string; prefix: string[] } {
 const DROP_ENV = new Set([
   "CLAUDECODE",
   "CLAUDE_CODE_ENTRYPOINT",
+  // Set when the control app itself was started from inside a Claude Code session: the child would
+  // otherwise reuse that session's id (and talk to its sockets) instead of starting its own.
+  "CLAUDE_CODE_SESSION_ID",
+  "CLAUDE_CODE_CHILD_SESSION",
+  "CLAUDE_CODE_MESSAGING_SOCKET",
+  "CLAUDE_CODE_SSE_PORT",
+  "CLAUDE_PID",
   "NODE_ENV",
   "TURBOPACK",
   "NEXT_RUNTIME",
@@ -150,6 +159,8 @@ export function buildArgs(features: CliFeatures, opts: { resume?: string | null 
   args.push("--max-turns", String(Number.isFinite(maxTurns) && maxTurns > 0 ? maxTurns : 40));
   args.push("--append-system-prompt", BUILDER_RULES);
   if (opts.resume) args.push("--resume", opts.resume);
+  // A new conversation gets its own id, so --resume later always finds *this* build.
+  else if (has("--session-id")) args.push("--session-id", randomUUID());
   return args;
 }
 
