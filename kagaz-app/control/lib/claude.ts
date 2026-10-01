@@ -129,7 +129,7 @@ export function detectFeatures(): Promise<CliFeatures> {
       (err: Error & { features?: CliFeatures }) => {
         g.__kagazCli = undefined; // try again on the next run
         const features = err.features ?? { version: null, help: "", flags: new Set<string>(), mock: false };
-        setCliVersion(null, false);
+        setCliVersion(null, false, false);
         console.warn(`[kagaz] Could not run \`${claudeBin()} --help\`; using only the basic flags.`);
         return features;
       },

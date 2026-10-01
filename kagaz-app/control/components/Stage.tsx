@@ -244,6 +244,12 @@ function StageScreen() {
             onSample={buildSample}
           />
           {state.error && state.status !== "running" && <ErrorBanner message={state.error} />}
+          {!state.error && state.config.cliOk === false && !state.config.mock && (
+            <ErrorBanner
+              message="Claude Code CLI not found: `claude --help` failed."
+              hint="Install Claude Code and run `claude` once to log in, or rehearse with npm run dev:mock."
+            />
+          )}
           <ActivityFeed state={state} />
           <TweakBox canTweak={state.canTweak} running={running} onSend={sendTweak} />
         </div>

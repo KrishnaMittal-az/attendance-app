@@ -52,6 +52,16 @@ export interface KagazConfig {
   mock: boolean; // KAGAZ_MOCK=1 (rehearsal mode, fake Claude)
   previewUrl: string; // iframe src, default http://localhost:5173
   cliVersion: string | null; // output of `claude --version`, if known
+  cliOk: boolean | null; // null = not checked yet, false = `claude --help` failed (not installed / not on PATH)
+}
+
+/** Plan usage from the CLI's rate_limit_event (Claude subscription limits). */
+export interface PlanUsage {
+  status: string | null; // "allowed", "allowed_warning", "rejected", …
+  fiveHour: number | null; // utilization of the 5-hour window, 0..1
+  sevenDay: number | null; // utilization of the 7-day window, 0..1
+  resetsAt: number | null; // epoch ms when the limiting window resets
+  at: number; // when we last heard
 }
 
 export interface KagazState {
@@ -69,6 +79,7 @@ export interface KagazState {
   summary: string | null; // Claude's final one-sentence description
   error: string | null;
   previewVersion: number; // bump → UI reloads the iframe (after reset/restore)
+  usage: PlanUsage | null; // last plan-usage report from Claude Code (kept across runs)
   config: KagazConfig;
 }
 

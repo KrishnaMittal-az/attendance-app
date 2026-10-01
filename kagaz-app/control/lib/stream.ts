@@ -29,6 +29,7 @@ interface ToolEntry {
   json: string; // accumulated input_json_delta
   pathShown: boolean;
   finalized: boolean;
+  pathText?: string; // label decided once the file path is known ("Creating X…" / "Rewriting X…")
 }
 
 interface Contribution {
@@ -118,7 +119,7 @@ function toolPathText(name: string, filePath: string): string | null {
     case "Read":
       return /^sketch\.[a-z0-9]+$/i.test(base) ? "Reading sketch…" : `Reading ${base}…`;
     case "Write":
-      return `Creating ${base}…`;
+      return `Creating ${base}…`; // StreamReducer.pathLabel picks "Rewriting" for files that already exist
     case "Edit":
     case "MultiEdit":
       return `Editing ${base}…`;
@@ -165,10 +166,29 @@ export class StreamReducer {
   private waitingItem: number | null = null; // "Thinking…" while we wait for the model
   private retryItem: number | null = null;
 
+  /** Absolute paths that already exist (tweaks) or were written earlier in this run. */
+  private readonly knownFiles: Set<string>;
+
   constructor(
     private readonly cwd: string,
     private readonly isCurrent: () => boolean,
-  ) {}
+    existingFiles: Iterable<string> = [],
+  ) {
+    this.knownFiles = new Set(existingFiles);
+  }
+
+  /** The feed label for a tool once its path is known; decided once per tool call. */
+  private pathLabel(tool: ToolEntry, filePath: string): string | null {
+    if (tool.pathText) return tool.pathText;
+    let text = toolPathText(tool.name, filePath);
+    if (tool.name === "Write") {
+      const abs = this.abs(filePath);
+      if (this.knownFiles.has(abs)) text = `Rewriting ${path.basename(filePath)}…`;
+      this.knownFiles.add(abs);
+    }
+    if (text) tool.pathText = text;
+    return text;
+  }
 
   /** True once Claude started any tool call in this process. */
   get usedTools(): boolean {
@@ -195,6 +215,9 @@ export class StreamReducer {
         case "result":
           this.onResult(ev);
           break;
+        case "rate_limit_event":
+          this.onRateLimit(ev);
+          break;
         default:
           break;
       }
@@ -216,6 +239,28 @@ export class StreamReducer {
     if (this.retryItem == null) return;
     updateFeed(this.retryItem, { live: false });
     this.retryItem = null;
+  }
+
+  // --- plan usage -----------------------------------------------------------------------------------
+
+  private onRateLimit(ev: Json): void {
+    const info = isObj(ev.rate_limit_info) ? ev.rate_limit_info : null;
+    if (!info) return;
+    const windows = isObj(info.unifiedWindows) ? info.unifiedWindows : {};
+    const util = (w: unknown) => {
+      const u = isObj(w) ? num(w.utilization) : null;
+      return u === null ? null : Math.min(Math.max(u, 0), 1);
+    };
+    const resetsAt = num(info.resetsAt);
+    update((s) => {
+      s.usage = {
+        status: str(info.status),
+        fiveHour: util(windows.five_hour),
+        sevenDay: util(windows.seven_day),
+        resetsAt: resetsAt === null ? null : resetsAt * 1000,
+        at: Date.now(),
+      };
+    });
   }
 
   // --- system ---------------------------------------------------------------------------------------
@@ -357,7 +402,7 @@ export class StreamReducer {
     if (!tool.pathShown) {
       const m = FILE_PATH_RE.exec(tool.json);
       if (m) {
-        const text = toolPathText(tool.name, unescapeJsonString(m[1]));
+        const text = this.pathLabel(tool, unescapeJsonString(m[1]));
         if (text) updateFeed(tool.itemId, { text });
         tool.pathShown = true;
       }
@@ -417,7 +462,7 @@ export class StreamReducer {
     const filePath = str(input.file_path) ?? str(input.path);
     const patch: { text?: string; detail?: string } = {};
     if (filePath) {
-      const text = toolPathText(name, filePath);
+      const text = this.pathLabel(tool, filePath);
       if (text) patch.text = text;
     }
     if (name === "Write" && filePath) {

@@ -38,6 +38,7 @@ function initialConfig(): KagazConfig {
     mock: process.env.KAGAZ_MOCK === "1",
     previewUrl: process.env.KAGAZ_PREVIEW_URL || "http://localhost:5173",
     cliVersion: null,
+    cliOk: null,
   };
 }
 
@@ -57,6 +58,7 @@ function initialState(): KagazState {
     summary: null,
     error: null,
     previewVersion: 0,
+    usage: null,
     config: initialConfig(),
   };
 }
@@ -167,9 +169,10 @@ export function settleLiveFeed(): void {
   });
 }
 
-export function setCliVersion(version: string | null, effortSupported: boolean): void {
+export function setCliVersion(version: string | null, effortSupported: boolean, ok = true): void {
   update((state) => {
     state.config.cliVersion = version;
+    state.config.cliOk = ok;
     state.config.effort = effortSupported ? configuredEffort() : null;
   });
 }

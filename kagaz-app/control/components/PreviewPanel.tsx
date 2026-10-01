@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { KagazState } from "@/lib/types";
 import { IconExternal, IconGlobe, IconReload, IconSparkle } from "./icons";
 import { StatsCard } from "./StatsCard";
@@ -16,6 +16,23 @@ export function PreviewPanel({ state }: { state: KagazState }) {
   const done = state.status === "done";
   const showStats = done && dismissedRun !== state.runId;
   const duration = runDurationMs(state);
+
+  // The card covers the bottom of the app: tuck it away (into the duration pill) after a while, or as
+  // soon as the presenter clicks into the app (focus moving into the iframe blurs this window).
+  useEffect(() => {
+    if (!showStats) return;
+    const runId = state.runId;
+    const hide = () => setDismissedRun(runId);
+    const timer = window.setTimeout(hide, 12_000);
+    const onBlur = () => {
+      if (document.activeElement instanceof HTMLIFrameElement) hide();
+    };
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, [showStats, state.runId]);
 
   return (
     <div className="relative flex min-h-0 min-w-0 flex-1">

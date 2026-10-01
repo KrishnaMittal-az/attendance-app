@@ -10,6 +10,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const mock = process.argv.includes("--mock") || process.env.KAGAZ_MOCK === "1";
 const isWin = process.platform === "win32";
 
+const [major, minor] = process.versions.node.split(".").map(Number);
+if (major < 20 || (major === 20 && minor < 19)) {
+  console.error(`\n✗ Node ${process.versions.node} is too old: Next.js 16 and Vite 8 need Node 20.19+ (22 LTS recommended).\n`);
+  process.exit(1);
+}
+
 for (const dir of ["control", "playground"]) {
   if (!existsSync(path.join(root, dir, "node_modules"))) {
     console.error(`\n✗ ${dir}/node_modules is missing. Run \`npm run setup\` in ${root} first.\n`);

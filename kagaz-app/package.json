@@ -9,6 +9,6 @@
     "reset": "git checkout HEAD -- playground && git clean -fdq -- playground"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19"
   }
 }

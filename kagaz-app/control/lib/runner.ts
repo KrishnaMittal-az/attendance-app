@@ -209,7 +209,9 @@ async function spawnClaude(opts: SpawnOptions): Promise<void> {
     stdoutLog: null,
     stderrLog: null,
   };
-  proc.reducer = new StreamReducer(playgroundDir(), () => isProcCurrent(proc));
+  // Tweaks: files already in src/ are "Rewriting X…", not "Creating X…".
+  const existing = opts.mode === "tweak" ? listSourceFiles(path.join(playgroundDir(), "src")) : [];
+  proc.reducer = new StreamReducer(playgroundDir(), () => isProcCurrent(proc), existing);
   r.proc = proc;
   openLogs(proc, opts.retried, commandLine);
 
@@ -663,5 +665,17 @@ export async function restoreSnapshot(id: string): Promise<void> {
     resetFeed([{ kind: "system", text: `Restored “${truncate(meta.title, 100)}” from the gallery` }]);
   } finally {
     r.maintenance = null;
+  }
+}
+
+/** Absolute paths of the files under dir (recursive; small folder, sync is fine). */
+function listSourceFiles(dir: string): string[] {
+  try {
+    return fs
+      .readdirSync(dir, { recursive: true, withFileTypes: true })
+      .filter((d) => d.isFile())
+      .map((d) => path.join(d.parentPath, d.name));
+  } catch {
+    return [];
   }
 }

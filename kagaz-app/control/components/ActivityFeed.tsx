@@ -112,6 +112,9 @@ export function ActivityFeed({ state }: { state: KagazState }) {
   };
 
   const model = [config.model ?? "default model", config.effort].filter(Boolean).join(" · ");
+  const usage = state.usage;
+  const usagePct = usage?.fiveHour != null ? Math.round(usage.fiveHour * 100) : null;
+  const usageLimited = usage?.status != null && usage.status !== "allowed";
 
   return (
     <section
@@ -138,6 +141,20 @@ export function ActivityFeed({ state }: { state: KagazState }) {
               title="KAGAZ_MOCK=1: rehearsal mode with a fake Claude"
             >
               mock
+            </span>
+          )}
+          {(usagePct !== null || usageLimited) && (
+            <span
+              className={`rounded-md px-1.5 py-0.5 font-mono text-xs ${
+                usageLimited || (usagePct ?? 0) >= 90
+                  ? "bg-red-500/15 text-red-300"
+                  : (usagePct ?? 0) >= 75
+                    ? "bg-amber-400/15 text-amber-300"
+                    : "bg-white/[0.04] text-zinc-500"
+              }`}
+              title={`Claude plan usage, 5-hour window${usage?.resetsAt ? ` (resets ${new Date(usage.resetsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})` : ""}${usage?.status ? ` · ${usage.status}` : ""}`}
+            >
+              {usageLimited && usagePct === null ? "limit" : `plan ${usagePct}%`}
             </span>
           )}
           <span className="rounded-md bg-white/[0.06] px-2 py-0.5 font-mono text-[0.8125rem] text-zinc-300" title={config.cliVersion ?? undefined}>

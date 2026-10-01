@@ -93,12 +93,14 @@ export function initialState(): KagazState {
     summary: null,
     error: null,
     previewVersion: 0,
+    usage: null,
     config: {
       model: null,
       effort: null,
       mock: false,
       previewUrl: DEFAULT_PREVIEW_URL,
       cliVersion: null,
+      cliOk: null,
     },
   };
 }
