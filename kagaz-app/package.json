@@ -1,0 +1,14 @@
+{
+  "name": "kagaz-app",
+  "private": true,
+  "description": "Kagaz → App: paper sketch to working web app, live, with Claude Code",
+  "scripts": {
+    "setup": "npm --prefix control install && npm --prefix playground install",
+    "dev": "node scripts/dev.mjs",
+    "dev:mock": "node scripts/dev.mjs --mock",
+    "reset": "git checkout HEAD -- playground && git clean -fdq -- playground"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
